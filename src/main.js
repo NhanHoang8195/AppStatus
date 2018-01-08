@@ -2,7 +2,6 @@ import Vue from 'vue'
 import App from './App.vue'
 import VueFire from 'vuefire'
 var VueGoogleApps = require('vue2-google-maps')
-Vue.use(VueResource);
 Vue.use(VueFire);
 Vue.use(VueGoogleApps, {
   load: {

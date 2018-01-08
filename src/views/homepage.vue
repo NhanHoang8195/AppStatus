@@ -1,106 +1,71 @@
+
 <template>
-<div>
-  <template v-if="isLogin==='notLoggin' || isLogin==='logginFail'">
-        <form class="col-sm-6 col-sm-offset-3" @submit.prevent="login">
-            <div class="form-group">
-              <label for="exampleInputEmail1">Username</label> <template v-if="isLogin==='logginFail'"><p style="color:red ">Username hoặc password chưa chính xác</p></template>
-  <input v-model="taixe.username" type="text" class="form-control" id="exampleInputEmail1" placeholder="Username" onblur="this.placeholder='Username'" onfocus="this.placeholder=''" required>
-</div>
-<div class="form-group">
-  <label for="exampleInputPassword1">Password</label>
-  <input v-model="taixe.password" type="password" class="form-control" id="exampleInputPassword1" placeholder="Password" onblur="this.placeholder='Password'" onfocus="this.placeholder=''" required>
-</div>
-<button type="submit" class="btn btn-primary">Submit</button>
-</form>
-</template>
-<template v-if="isLogin==='logginSuccess'">
 <!--login successfully -->
 <div>
-  <center>
-    <h2>Xin chào {{taixe.username}}</h2>
-  </center>
-  <div class="col-sm-5">
-    <gmap-map ref="map" id="map" :center="center" :zoom="10" style="height: 300px">
 
-      <template v-for="marker in taixeInfo" v-if="marker.username===taixe.username">
-        <gmap-marker :position="marker.location"  :draggable="true" :title="'Vị trí của bạn'"  :label="'A'"  :clickable="false"  @dragend="dragMarker($event, marker)"></gmap-marker>
-        <!-- @dragend="dragMarker($event, marker)" -->
-        <template v-for="user in userInfo"> <!--v-if="taixe.keyuser===user['.key']" -->
-             <template v-for="userdetail in marker.keyuser" v-if="userdetail===user['.key']">
-              <gmap-marker :position="user.location"  :draggable="false" @click="clickMarker($event,user)"  :label="'B'", :title="user.phone" ></gmap-marker>
-            </template>
+  <div class="col-sm-5">
+    <gmap-map ref="map" id="map" :center="center" :zoom="4" style="height: 300px">
+      <template v-for="(user, index) in userInfo">
+        <gmap-marker :key="user.date" v-if="user.status!=='KET-THUC'"  :position="user.location" :clickable="false" :draggable="false"  :label="'K'" :icon="'./src/assets/images/khach.png'"></gmap-marker>
       </template>
+      <template v-for="(marker, i) in taixeInfoFunction">
+        <gmap-marker :key="i"  :position="marker.location" :clickable="false" :draggable="false" :label="'T'" :icon="'./src/assets/images/taixe.png'" ></gmap-marker>
+        <!--  @position_changed="direction(marker)-->
       </template>
     </gmap-map>
-    <template v-if="displayInfo">
+    <template>
       <div>
       <table class="table table-hover table-bordered">
         <thead>
           <tr>
             <th>#</th>
-            <th>Chir d</th>
+            <th>Thông tin</th>
           </tr>
         </thead>
         <tbody >
           <tr>
-            <th>Số điện thoại</th>
-            <td>{{obj.phone}}</td>
+            <th>Tên tài xế</th>
+            <td>{{taixe.username}}</td>
+          </tr>
+          <tr>
+            <th>Khách hàng</th>
+            <td>{{user.phone}}</td>
           </tr>
           <tr>
             <th>Địa điểm đón</th>
-            <td>{{obj.address}}</td>
+            <td>{{user.address}}</td>
           </tr>
         </tbody>
       </table>
       </div>
     </template>
-    <template v-else>
-      <div id="directionPanel">
-
-      </div>
-    </template>
   </div>
   <div class="col-sm-7">
+    <center>Danh sách khách hàng</center>
     <table class="table table-hover table-bordered">
       <thead>
         <tr>
-
           <th>Time</th>
-          <th>Địa chỉ đón</th>
           <th>Số điện thoại</th>
+          <th>Địa điểm đón</th>
           <th>Status</th>
+          <th>Tên tài xế</th>
+          <th>Lộ trình</th>
         </tr>
       </thead>
       <tbody>
-        <template v-for="marker in taixeInfo" v-if="marker.username===taixe.username && marker.status!=='KET-THUC'">
-          <tr v-for="user in userInfo">
-             <template v-for="userdetail in marker.keyuser" v-if="userdetail===user['.key']">
-              <td>{{user.date}}</td>
-              <td> {{user.address}} </td>
-              <td>{{user.phone}} </td>
-              <td>
-                <template v-if="marker.status==='DANG-SAN-SANG'">
-                  <button  @click="agree(true,marker,user)" class="btn btn-primary btn-sm">Đồng ý</button>
-                  <button @click="agree(false, marker,user)" class="btn btn-primary btn-sm">Không</button>
-                </template>
-        <template v-else-if="marker.status==='DANG-CHO-KHACH'">
-                  <button @click="start(marker)" class="btn btn-success btn-sm">Bắt đầu</button>
-                </template>
-        <template v-else>
-                  <button @click="end(marker, user)" class="btn btn-success btn-sm">Kết thúc</button>
-                </template>
-        </td>
-        </template>
-
+        <tr v-for="(marker, index) in listUser" v-if="marker.status!=='KET-THUC'" >
+          <td>{{marker.date}}</td>
+          <td>{{marker.phone}}</td>
+          <td>{{marker.address}}</td>
+          <td>{{marker.status}}</td>
+          <td>{{marker.taixe}}</td>
+          <td v-if="typeof marker.taixe!=='undefined'"><button class="btn btn-primary btn-sm" @click.prevent="direction(false, marker)">Xem</button></td>
+          <td v-else></td>
         </tr>
-
-        </template>
       </tbody>
     </table>
   </div>
-</div>
-</template>
-
 </div>
 </template>
 
@@ -129,137 +94,88 @@ export default {
   },
   data() {
     return {
-      taixe: {
-        username: '',
-        password: '',
-        location: {
-          lat: 10.7480929,
-          lng: 106.6352362
-        },
-        status: 'DANG-SAN-SANG'
+      center: {
+        lat: 14.058324,
+        lng: 108.277199
       },
-      isLogin: 'notLoggin', // check login or not
-      center: {},
-      obj: {},
+      user:{},
+      taixe:{},
       displayInfo: false,
-      userDirection: {}
+      isXem:false
     }
   },
 
+
   methods: {
-    dragMarker: function(event, obj) { // keo tha vi tri hien tai
-      this.taixe.location.lat = event.latLng.lat();
-      this.taixe.location.lng = event.latLng.lng();
-      var updateLinks = {};
-      updateLinks['taixe-info/' + this.taixe['.key'] + '/location'] = this.taixe.location;
-      db.ref().update(updateLinks);
-      directionsDisplay.setPanel(null);
-      directionsDisplay.setMap(null);
-      this.direction(this.taixe, this.userDirection);
-    },
     clickMarker: function(event, obj) { // click vao 1 marker hien len info cua maker do
       this.displayInfo = true;
       this.obj = obj;
     },
-    login: function() {
+    /*
+    @param:
+      obj: true => location has been updated
+          false => location has not changed yet
+    */
+    direction: function(obj, user) {
 
-      for (let i = 0; i < this.taixeInfo.length; i++) {
-        if (this.taixe.username === this.taixeInfo[i].username && this.taixe.password === this.taixeInfo[i].password) { // match user
-          this.isLogin = 'logginSuccess';
-          this.taixe = this.taixeInfo[i];
-          this.center = this.taixe.location;
-          break;
-        } else {
-          this.isLogin = 'logginFail';
-        }
+      if(this.isXem===true) {
+        directionsDisplay.setMap(null);
       }
-      //  taixeInfoRef.push(this.taixe)
-    },
-    direction: function(marker, user) {
+
+      var source ;
+      var des ;
+      if(obj === false) {
+        for(let i = 0; i < this.taixeInfo.length; i++) {  // find taixe for user
+          if(this.taixeInfo[i].username === user.taixe) {
+            source = new google.maps.LatLng(this.taixeInfo[i].location.lat, this.taixeInfo[i].location.lng);
+            this.taixe = this.taixeInfo[i];
+            des = new google.maps.LatLng(user.location.lat, user.location.lng);
+            this.user = user;
+            break;
+          }
+        }
+      } else {
+        source = new google.maps.LatLng(user.location.lat, user.location.lng);
+        des = new google.maps.LatLng(this.user.location.lat, this.user.location.lng)
+      }
+
       directionsService = new google.maps.DirectionsService();
       directionsDisplay = new google.maps.DirectionsRenderer({
         map: this.$refs['map'].$mapObject,
         suppressMarkers: true,
-        panel: document.getElementById('directionPanel')
       });
-      var source = new google.maps.LatLng(marker.location.lat, marker.location.lng);
-      var des = new google.maps.LatLng(user.location.lat, user.location.lng);
+
       directionsService.route({
         origin: source,
         destination: des,
         travelMode: 'DRIVING'
       }, function(response, status) {
         if (status === 'OK') {
-          console.log(response);
           directionsDisplay.setDirections(response);
         } else {
           window.alert('Directions request failed due to ' + status);
         }
       });
-      console.log(directionsDisplay);
+      this.isXem=true;
+    }
+  },
+  computed:{
+    listUser: function() {
+       return this.userInfo.reverse();
     },
-    agree: function(obj, marker, user) {
-      this.taixe = marker;
-      this.userDirection = user;
-      var updateLinks = {};
+    taixeInfoFunction: function (){
+      if(this.isXem === true) {
 
-      if (obj === true) {
-        updateLinks['taixe-info' + '/' + marker['.key'] + '/status'] = 'DANG-CHO-KHACH';
-        for (let i = 0; i < this.taixeInfo.length; i++) {
-          for (let key in this.taixeInfo[i].keyuser) {
-            if (this.taixeInfo[i].username === this.taixe.username) {
-              if (this.taixeInfo[i].keyuser[key] !== user['.key']) {
-                updateLinks['taixe-info' + '/' + this.taixeInfo[i]['.key'] + '/keyuser/' + key] = null;
-              }
-            } else if (this.taixeInfo[i].keyuser[key] === user['.key']) {
-              updateLinks['taixe-info' + '/' + this.taixeInfo[i]['.key'] + '/keyuser/' + key] = null;
-            }
-          }
-        }
-        updateLinks['user-info/' + user['.key'] + '/status'] = 'DA-CO-XE';
-        db.ref().update(updateLinks);
-        this.direction(marker, user);
-      } else {
-        let count = 0;
-        for (let i = 0; i < this.taixeInfo.length; i++) {
-          for (let key in this.taixeInfo[i].keyuser) {
-            if (this.taixeInfo[i].keyuser[key] === user['.key']) {
-              count++;
-              break;
-            }
-          }
-        }
-        if (count === this.taixeInfo.length) {
-          updateLinks['user-info' + '/' + user['.key'] + '/status/'] = 'KHONG-CO-XE';
-          db.ref().update(updateLinks);
-          updateLinks = {}
-        }
-        for (let key in this.taixe.keyuser) {
-          if (this.taixe.keyuser[key] === user['.key']) {
-            updateLinks['taixe-info' + '/' + this.taixe['.key'] + '/keyuser/' + key] = null;
-            db.ref().update(updateLinks);
-
-            break;
+        for(let i = 0; i < this.taixeInfo.length; i++) {
+          if(this.taixeInfo[i].username===this.taixe.username && this.taixeInfo[i].location !== this.taixe.location) {
+            this.taixe = this.taixeInfo[i];
+            this.direction(true, this.taixeInfo[i]);
           }
         }
       }
-
-    },
-    start: function(obj) {
-      var updateLinks = {};
-      updateLinks['taixe-info' + '/' + obj['.key'] + '/status'] = 'BAT-DAU';
-      db.ref().update(updateLinks);
-    },
-    end: function(obj, user) {
-      var updateLinks = {};
-      updateLinks['taixe-info' + '/' + obj['.key'] + '/status'] = 'DANG-SAN-SANG';
-      updateLinks['taixe-info' + '/' + obj['.key'] + '/keyuser'] = null;
-      updateLinks['user-info' + '/' + user['.key'] + '/status'] = 'KET-THUC';
-      updateLinks['taixe-info' + '/' + obj['.key'] + '/location'] = user.location;
-      db.ref().update(updateLinks);
-      directionsDisplay.setMap(null);
-
+      return this.taixeInfo;
     }
+
   }
 }
 </script>
